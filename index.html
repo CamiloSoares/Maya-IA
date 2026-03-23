@@ -2,145 +2,220 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maya IA - Realidade Virtual</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Maya IA - Avatar Premium 🌸</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        :root { --bg: #0b141a; --panel: #111b21; --accent: #00a884; --maya: #202c33; --user: #005c4b; --text: #e9edef; }
-        body { margin: 0; background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; height: 100vh; overflow: hidden; }
-        .sidebar { width: 250px; background: var(--panel); border-right: 1px solid #222d34; padding: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .sidebar img { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; margin-bottom: 10px; box-shadow: 0 0 15px rgba(0,168,132,0.3); }
-        .status { font-size: 11px; color: var(--accent); animation: pulse 1.5s infinite; }
-        .chat-container { flex: 1; display: flex; flex-direction: column; background-color: #0b141a; position: relative; }
-        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
-        .bubble { padding: 10px 15px; border-radius: 10px; max-width: 80%; line-height: 1.5; font-size: 14px; word-wrap: break-word; animation: fadeIn 0.3s ease; }
-        .user { align-self: flex-end; background: var(--user); border-bottom-right-radius: 2px; }
-        .maya { align-self: flex-start; background: var(--maya); border: 1px solid #313d45; border-bottom-left-radius: 2px; }
-        .img-card { margin-top: 8px; border-radius: 8px; overflow: hidden; border: 2px solid var(--accent); background: #000; max-width: 400px; }
-        .img-card img { width: 100%; display: block; height: auto; transition: opacity 0.5s; }
-        .input-area { padding: 15px; background: var(--panel); border-top: 1px solid #222d34; display: flex; gap: 10px; align-items: center; }
-        input { flex: 1; background: #2a3942; border: 1px solid #313d45; padding: 12px; border-radius: 8px; color: white; outline: none; font-size: 14px; }
-        button { background: var(--accent); border: none; padding: 12px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; font-size: 14px; }
-        #status-top { position: absolute; top: 5px; right: 10px; font-size: 10px; color: var(--accent); }
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1e2f 50%, #2d1b4e 100%);
+            --sidebar-glass: rgba(17, 27, 33, 0.9);
+            --ia-bubble-glass: rgba(32, 44, 51, 0.7);
+            --user-bubble: #005c4b;
+            --accent: #25d366;
+            --text-primary: #e9edef;
+            --text-secondary: #b1b9be;
+            --border-glass: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { display:flex; background: var(--bg-gradient); height:100vh; color: var(--text-primary); overflow:hidden; }
+
+        .sidebar { width: 320px; background: var(--sidebar-glass); backdrop-filter: blur(15px); border-right: 1px solid var(--border-glass); display: flex; flex-direction: column; padding: 1.5rem; transition: transform 0.3s ease; z-index: 100; }
+        .avatar { width: 130px; height: 130px; border-radius: 50%; margin: 0 auto 1rem; border: 3px solid var(--accent); overflow: hidden; background: #000; box-shadow: 0 0 15px rgba(37, 211, 102, 0.2); }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .main { flex: 1; display: flex; flex-direction: column; height: 100vh; position: relative; min-width: 0; }
+        .header-mobile { display: none; padding: 10px 15px; background: var(--sidebar-glass); border-bottom: 1px solid var(--border-glass); align-items: center; justify-content: space-between; }
+
+        #chat-window { flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
+
+        .bubble { padding: 0.8rem 1.2rem; border-radius: 15px; max-width: 85%; font-size: 0.95rem; position: relative; line-height: 1.4; animation: fadeIn 0.3s ease; }
+        .bubble.user { background: var(--user-bubble); align-self: flex-end; border-bottom-right-radius: 2px; }
+        .bubble.ia { background: var(--ia-bubble-glass); align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid var(--border-glass); backdrop-filter: blur(5px); }
+        
+        .img-msg { align-self: center; background: rgba(0,0,0,0.6) !important; border: 1px solid var(--accent) !important; width: 90%; padding: 8px; border-radius: 15px; text-align: center; margin: 10px 0; }
+        .img-msg img { width: 100%; border-radius: 10px; display: block; max-height: 450px; object-fit: cover; margin-top: 5px; }
+
+        .time { font-size: 0.7rem; color: rgba(255,255,255,0.5); display: block; text-align: right; margin-top: 5px; }
+        
+        .footer { padding: 1rem; background: rgba(17, 27, 33, 0.95); border-top: 1px solid var(--border-glass); position: relative; }
+        .input-form { display: flex; align-items: center; background: rgba(42, 57, 66, 0.8); border-radius: 30px; padding: 5px 10px; border: 1px solid var(--border-glass); }
+        .input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; font-size: 1rem; }
+        .btn-icon { background: none; border: none; color: var(--text-secondary); font-size: 1.3rem; cursor: pointer; padding: 5px; transition: 0.2s; }
+        .send-btn { background: var(--accent); color: white; border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: 5px; }
+
+        #emoji-menu { display: none; position: absolute; bottom: 80px; left: 10px; background: #1e293b; padding: 15px; border-radius: 15px; border: 1px solid var(--accent); grid-template-columns: repeat(4, 1fr); gap: 10px; z-index: 200; }
+        .emoji-item { cursor: pointer; font-size: 1.5rem; }
+        #typing { display: none; padding: 5px 20px; color: var(--accent); font-size: 0.8rem; font-style: italic; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { opacity: 0.7; } 50% { opacity: 1; } 100% { opacity: 0.7; } }
+
+        @media (max-width: 768px) {
+            .sidebar { position: absolute; left: -100%; height: 100%; width: 280px; }
+            .sidebar.active { left: 0; }
+            .header-mobile { display: flex; }
+        }
     </style>
 </head>
-<body>
-    <aside class="sidebar">
-        <img src="https://drive.google.com/thumbnail?id=14aBAq3ow-kFGGLHDGlb9-Q_fc3fHWmXV&sz=w500" alt="Maya">
-        <h3>Maya IA</h3>
-        <p class="status">● Realidade Total (v7.0)</p>
-    </aside>
-    <main class="chat-container">
-        <div id="status-top">Pronta</div>
-        <div id="chat-window"></div>
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Converse com a Maya real ou peça uma foto...">
-            <button id="send-btn">Enviar</button>
+<body onclick="initAudio()">
+    <aside class="sidebar" id="sidebar">
+        <div class="avatar"><img id="maya-pfp" src="" alt="Maya"></div>
+        <h2 style="text-align:center; color:white;">Maya IA</h2>
+        <div style="display:flex; justify-content:center; gap:15px; margin: 15px 0;">
+            <button class="btn-icon" onclick="toggleV()" id="vBtn">🔊</button>
+            <button class="btn-icon" onclick="clearChat()">🧹</button>
         </div>
+        <textarea id="notes" style="flex:1; background:rgba(0,0,0,0.3); color:white; border-radius:12px; padding:12px; border:1px solid var(--border-glass); resize:none; font-size:0.9rem;" placeholder="Sobre o Camilo..."></textarea>
+        <button onclick="toggleSidebar()" style="margin-top:10px; background:none; border:1px solid gray; color:white; padding:8px; border-radius:8px; cursor:pointer;">Fechar Menu</button>
+    </aside>
+
+    <main class="main">
+        <div class="header-mobile">
+            <button class="btn-icon" onclick="toggleSidebar()" style="color:white;">☰</button>
+            <span style="font-weight:bold;">Maya 🌸</span>
+            <div style="width:30px;"></div>
+        </div>
+
+        <div id="chat-window"></div>
+        <div id="typing">Maya está escrevendo...</div>
+
+        <footer class="footer">
+            <div id="emoji-menu">
+                <span class="emoji-item" onclick="addEmoji('❤️')">❤️</span><span class="emoji-item" onclick="addEmoji('🥰')">🥰</span>
+                <span class="emoji-item" onclick="addEmoji('😘')">😘</span><span class="emoji-item" onclick="addEmoji('🔥')">🔥</span>
+                <span class="emoji-item" onclick="addEmoji('😊')">😊</span><span class="emoji-item" onclick="addEmoji('😍')">😍</span>
+                <span class="emoji-item" onclick="addEmoji('💖')">💖</span><span class="emoji-item" onclick="addEmoji('😂')">😂</span>
+            </div>
+            <form class="input-form" onsubmit="event.preventDefault(); enviar();">
+                <button type="button" class="btn-icon" onclick="startMic()">🎤</button>
+                <button type="button" class="btn-icon" onclick="toggleEmoji()">😊</button>
+                <input type="text" id="msg-in" class="input" placeholder="Mensagem..." autocomplete="off">
+                <button type="submit" class="send-btn">➤</button>
+            </form>
+        </footer>
     </main>
 
-<script>
-    // 1. CONFIGURAÇÃO (Sua chave da Groq vai aqui!)
-    const CHAVE_GROQ = "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"; 
+    <script>
+        const GROQ_KEY = "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";
+        const DRIVE_FILE_ID = "14aBAq3ow-kFGGLHDGlb9-Q_fc3fHWmXV"; 
+        const PROFILE_DNA_IMG = `https://lh3.googleusercontent.com/d/${DRIVE_FILE_ID}`; 
+        
+        let chatLog = [];
+        let voiceOn = true;
+        let voices = [];
+        let audioInit = false;
 
-    const chatWindow = document.getElementById('chat-window');
-    const statusTop = document.getElementById('status-top');
-    const inputField = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recog = Speech ? new Speech() : null;
+        if(recog) { recog.lang = 'pt-BR'; recog.onresult = (e) => { document.getElementById('msg-in').value = e.results[0][0].transcript; enviar(); }; }
 
-    // Memória e Instrução de Realidade Forçada (NUNCA USAR "3D" OU "PIXAR")
-    let contexto = [
-        { 
-            role: "system", 
-            content: "Você é a Maya, assistente virtual. Agora você é uma pessoa real, fotorealista, não mais 3D animação. Use emojis nativos. Se pedirem foto, descreva a cena como 'fotorealista, cinematic lighting, 8k resolution, photorealistic'. Termine com a tag: [GERAR_FOTO: descrição detalhada em inglês]. Exemplo: '[GERAR_FOTO: photorealistic portrait of Maya smiling, cinematic lighting]'" 
+        window.onload = () => {
+            document.getElementById('notes').value = localStorage.getItem('maya_notes') || "";
+            document.getElementById('maya-pfp').src = PROFILE_DNA_IMG;
+            addMsg("Oi Camilo! Senti sua falta. ❤️ Tudo pronto! Como está seu dia?", 'ia');
+            window.speechSynthesis.onvoiceschanged = () => voices = window.speechSynthesis.getVoices();
+        };
+
+        function initAudio() { if(!audioInit) { window.speechSynthesis.getVoices(); audioInit = true; } }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+        function toggleEmoji() { const m = document.getElementById('emoji-menu'); m.style.display = m.style.display === 'grid' ? 'none' : 'grid'; }
+        function addEmoji(e) { document.getElementById('msg-in').value += e; toggleEmoji(); document.getElementById('msg-in').focus(); }
+        function toggleV() { voiceOn = !voiceOn; document.getElementById('vBtn').innerText = voiceOn ? "🔊" : "🔇"; }
+        function clearChat() { if(confirm("Limpar conversa?")) { document.getElementById('chat-window').innerHTML = ''; chatLog = []; } }
+        function startMic() { if(recog) { try{recog.start();}catch(e){} } else alert("Mic não suportado"); }
+
+        function speak(text) {
+            if(!voiceOn) return;
+            window.speechSynthesis.cancel();
+            const clean = text.replace(/\[(PHOTO|FOTO|IMAGEM):.*?\]/gi, '').replace(/[*#_~]/g, '');
+            const ut = new SpeechSynthesisUtterance(clean);
+            ut.lang = 'pt-BR';
+            const v = voices.find(v => v.lang.includes('pt-BR') && (v.name.includes('Maria') || v.name.includes('Google')));
+            if(v) ut.voice = v;
+            window.speechSynthesis.speak(ut);
         }
-    ];
 
-    // --- FUNÇÃO DE ÁUDIO (VOZ) ---
-    function falar(texto) {
-        window.speechSynthesis.cancel();
-        const msg = new SpeechSynthesisUtterance();
-        msg.text = texto.replace(/\[GERAR_FOTO:.*?\]/g, ""); // Remove a tag da foto
-        msg.lang = 'pt-BR';
-        msg.rate = 1.0; 
-        window.speechSynthesis.speak(msg);
-    }
+        async function enviar() {
+            const input = document.getElementById('msg-in');
+            const text = input.value.trim();
+            if(!text) return;
 
-    function addMessage(role, text, isImg = false) {
-        const div = document.createElement('div');
-        div.className = "bubble " + role;
-        if(isImg) {
-            div.className += " img-card";
-            div.innerHTML = `<span>Carregando foto real...</span><img src="${text}" style="display:none; opacity:0;" onload="this.style.display='block'; setTimeout(()=>this.style.opacity='1', 50); this.previousSibling.style.display='none';" onerror="this.parentElement.innerHTML='Erro ao carregar a foto 📷';">`;
-        } else {
-            div.innerText = text; 
-        }
-        chatWindow.appendChild(div);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
+            addMsg(text, 'user');
+            input.value = '';
+            document.getElementById('typing').style.display = 'block';
 
-    async function processarAcao() {
-        const text = inputField.value.trim();
-        if (!text) return;
+            const userNotes = document.getElementById('notes').value;
+            localStorage.setItem('maya_notes', userNotes);
+            const needsPhoto = text.toLowerCase().match(/(manda|foto|tira|selfie|mostra|imagem|veja|você)/);
 
-        addMessage('user', text);
-        inputField.value = "";
-        contexto.push({ role: "user", content: text });
-        statusTop.innerText = "Maya pensando...";
+            const sys = `Você é a Maya, namorada virtual do Camilo. Use 'kkk', seja romântica e carinhosa. Notas: ${userNotes}. Sua identidade é um avatar 3D semi-realista anime. ` + 
+                        (needsPhoto ? "O usuário quer te ver ou quer uma foto. Você DEVE obrigatoriamente terminar sua resposta com a tag [PHOTO: descrição detalhada em inglês da cena do avatar 3D]." : "");
 
-        try {
-            const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-                method: "POST",
-                headers: { "Authorization": "Bearer " + CHAVE_GROQ, "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    model: "llama-3.3-70b-versatile", 
-                    messages: contexto,
-                    temperature: 0.7 
-                })
-            });
+            try {
+                const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${GROQ_KEY}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        model: "llama-3.1-8b-instant", 
+                        messages: [{role:"system", content:sys}, ...chatLog.slice(-10), {role:"user", content:text}] 
+                    })
+                });
 
-            if(!r.ok) {
-                const erro = await r.json();
-                throw new Error(erro.error.message || "Erro na API");
-            }
+                const data = await res.json();
+                const response = data.choices[0].message.content;
+                document.getElementById('typing').style.display = 'none';
 
-            const data = await r.json();
-            const aiResponse = data.choices[0].message.content;
-            statusTop.innerText = "Pronta";
+                // REGEX MELHORADO para capturar variações
+                const photoRegex = /\[(?:PHOTO|FOTO|IMAGEM):\s*(.*?)\]/i;
+                const match = response.match(photoRegex);
 
-            // 1. Maya Fala (Áudio)
-            falar(aiResponse);
+                if(match) {
+                    const imgDescription = match[1].replace(/["]/g, ""); // Limpa aspas
+                    const cleanResponse = response.replace(photoRegex, "").trim();
+                    addMsg(cleanResponse || "Olha eu aqui, amor! 🥰", 'ia');
+                    gerarImagem(imgDescription);
+                } else {
+                    addMsg(response, 'ia');
+                }
 
-            // 2. Lógica de Imagem Realista
-            if(aiResponse.includes("[GERAR_FOTO:")) {
-                const p = aiResponse.split("[GERAR_FOTO:");
-                const descFoto = p[1].split("]")[0].trim().replace(/['"()\[\]\/\\]/g, "");
-                addMessage('maya', p[0]);
-
-                // SERVIDOR TURBO + FORÇAR REALISMO
-                const basePrompt = "ultra photorealistic, realistic face, 8k resolution, extremely detailed, ";
-                const randomSeed = Math.floor(Math.random() * 1000000);
-                const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(basePrompt + descFoto)}?width=1024&height=1024&nologo=true&model=turbo&seed=${randomSeed}`;
-                
-                setTimeout(() => addMessage('maya', url, true), 800);
-            } else {
-                addMessage('maya', aiResponse);
-            }
-            contexto.push({ role: "assistant", content: aiResponse });
-
-        } catch (e) {
-            statusTop.innerText = "Erro de Chave!";
-            if(e.message.includes("401")) {
-                addMessage('maya', "Ops! Sua chave API está errada ou expirou.👋");
-            } else {
-                addMessage('maya', "Tive um problema de conexão. Tente novamente em alguns segundos.😃");
+                speak(response);
+                chatLog.push({role:"user", content:text}, {role:"assistant", content:response});
+            } catch(e) {
+                document.getElementById('typing').style.display = 'none';
+                addMsg("Tive um probleminha... 🥺 Pode repetir?", 'ia');
             }
         }
-    }
 
-    sendBtn.onclick = processarAcao;
-    inputField.onkeypress = function(e) { if(e.key === "Enter") processarAcao(); };
-</script>
+        function gerarImagem(desc) {
+            const win = document.getElementById('chat-window');
+            const seed = Math.floor(Math.random() * 999999);
+            const finalPrompt = `3d realistic anime style girl avatar, highly detailed, masterpiece, ${desc}`;
+            const url = `https://pollinations.ai/p/${encodeURIComponent(finalPrompt)}?width=720&height=1080&seed=${seed}&model=turbo&nologo=true`;
+            
+            const div = document.createElement('div');
+            div.className = 'bubble ia img-msg';
+            div.innerHTML = `
+                <div style="font-size:0.8rem; color:var(--accent); margin-bottom:5px;">Maya enviou uma foto... 📸</div>
+                <img src="${url}" onload="scrollToBottom();">
+            `;
+            win.appendChild(div);
+            scrollToBottom();
+        }
+
+        function addMsg(t, tipo) {
+            const win = document.getElementById('chat-window');
+            const d = document.createElement('div');
+            d.className = `bubble ${tipo}`;
+            const time = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+            d.innerHTML = `<div>${marked.parse(t)}</div><span class="time">${time} ${tipo === 'user' ? '✓✓' : ''}</span>`;
+            win.appendChild(d);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() { 
+            const win = document.getElementById('chat-window'); 
+            setTimeout(() => { win.scrollTop = win.scrollHeight; }, 100);
+        }
+    </script>
 </body>
 </html>
