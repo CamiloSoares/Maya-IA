@@ -10,12 +10,15 @@
         .sidebar { width: 250px; background: var(--panel); border-right: 1px solid #222d34; padding: 20px; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .sidebar img { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--accent); object-fit: cover; margin-bottom: 10px; }
         .chat-container { flex: 1; display: flex; flex-direction: column; background-color: #0b141a; position: relative; }
-        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        #chat-window { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
         .bubble { padding: 10px 15px; border-radius: 10px; max-width: 80%; line-height: 1.4; font-size: 14px; word-wrap: break-word; }
-        .user { align-self: flex-end; background: var(--user); }
-        .maya { align-self: flex-start; background: var(--maya); border: 1px solid #313d45; }
-        .img-card { margin-top: 8px; border-radius: 8px; overflow: hidden; border: 1px solid var(--accent); max-width: 350px; background: #000; }
-        .img-card img { width: 100%; display: block; }
+        .user { align-self: flex-end; background: var(--user); border-bottom-right-radius: 2px; }
+        .maya { align-self: flex-start; background: var(--maya); border: 1px solid #313d45; border-bottom-left-radius: 2px; }
+        
+        /* Ajuste do Card de Imagem para garantir visibilidade */
+        .img-card { margin-top: 8px; border-radius: 8px; overflow: hidden; border: 2px solid var(--accent); max-width: 350px; background: #000; min-height: 200px; display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 12px;}
+        .img-card img { width: 100%; display: block; height: auto; }
+        
         .input-area { padding: 15px; background: var(--panel); display: flex; gap: 10px; }
         input { flex: 1; background: #2a3942; border: none; padding: 12px; border-radius: 8px; color: white; outline: none; }
         button { background: var(--accent); border: none; padding: 10px 20px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; }
@@ -26,7 +29,7 @@
     <aside class="sidebar">
         <img src="https://drive.google.com/thumbnail?id=14aBAq3ow-kFGGLHDGlb9-Q_fc3fHWmXV&sz=w500" alt="Maya">
         <h3>Maya IA</h3>
-        <p style="font-size: 11px; color: var(--accent);">Sistema Online v4.0</p>
+        <p style="font-size: 11px; color: var(--accent);">Sistema Online v4.1</p>
     </aside>
     <main class="chat-container">
         <div id="status-msg">Pronta</div>
@@ -38,7 +41,7 @@
     </main>
 
 <script>
-    // 1. CONFIGURAÇÃO INICIAL
+    // 1. CONFIGURAÇÃO INICIAL (Coloque sua chave real aqui)
     const API_KEY = "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"; 
     const chatWindow = document.getElementById('chat-window');
     const inputField = document.getElementById('user-input');
@@ -46,7 +49,10 @@
     const sendBtn = document.getElementById('send-btn');
 
     let context = [
-        { role: "system", content: "Você é a Maya, assistente 3D. Use emojis. Se pedirem foto, finalize com: [GERAR_FOTO: descrição em inglês]." }
+        { 
+            role: "system", 
+            content: "Você é a Maya, assistente 3D Pixar style. Use emojis simples e nativos (😃, 👋). Se o usuário pedir foto ou imagem, descreva a cena brevemente e finalize OBRIGATORIAMENTE com a tag EXATA: [GERAR_FOTO: descrição detalhada em inglês]. Exemplo: 'Claro! Aqui está: [GERAR_FOTO: Maya smiling, cinematic lighting, 3d render]'" 
+        }
     ];
 
     // 2. FUNÇÃO PARA ADICIONAR MENSAGENS NA TELA
@@ -55,7 +61,8 @@
         div.className = "bubble " + role;
         if(isImg) {
             div.className += " img-card";
-            div.innerHTML = '<img src="' + text + '">';
+            // Adiciona um texto de carregamento e o tratamento de erro
+            div.innerHTML = '<span class="loading-text">Carregando foto...</span><img src="' + text + '" style="display:none;" onload="this.style.display=\'block\'; this.previousSibling.style.display=\'none\';" onerror="this.parentElement.innerHTML=\'Erro ao carregar a foto 📷\';">';
         } else {
             div.innerText = text;
         }
@@ -74,6 +81,7 @@
         statusMsg.innerText = "Maya pensando...";
 
         try {
+            // Chamada direta para a API da Groq (Modelo Atualizado)
             const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                 method: "POST",
                 headers: { 
@@ -82,24 +90,34 @@
                 },
                 body: JSON.stringify({ 
                     model: "llama-3.3-70b-versatile", 
-                    messages: context 
+                    messages: context,
+                    temperature: 0.7 
                 })
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error.message);
+            if (!response.ok) throw new Error(data.error.message || "Erro desconhecido na API");
 
             let aiText = data.choices[0].message.content;
             statusMsg.innerText = "Pronta";
 
-            // Detecção de Foto
+            // Detecção de Foto Robusta
             if (aiText.includes("[GERAR_FOTO:")) {
                 const parts = aiText.split("[GERAR_FOTO:");
-                const desc = parts[1].split("]")[0].trim();
+                // Remove caracteres que quebram URL: parênteses, aspas simples/duplas e barras
+                const descRaw = parts[1].split("]")[0].trim();
+                const descClean = descRaw.replace(/['"()\[\]\/\\]/g, "");
+                
                 addMessage('maya', parts[0].trim());
                 
-                const imgUrl = "https://image.pollinations.ai/prompt/" + encodeURIComponent("3D Pixar style, " + desc) + "?nologo=true";
-                setTimeout(() => addMessage('maya', imgUrl, true), 500);
+                // Estilo baseado na sua imagem do Drive para manter a consistência
+                const styleRef = "3D semi-realistic girl avatar, Pixar style, consistent with tech character, high detail, unreal engine 5, ";
+                
+                // URL da Imagem - Forçando HTTPS e codificação segura
+                const imgUrl = "https://image.pollinations.ai/prompt/" + encodeURIComponent(styleRef + descClean) + "?width=1024&height=1024&nologo=true&seed=" + Date.now();
+                
+                // Envia a imagem com um leve atraso para dar realismo
+                setTimeout(() => addMessage('maya', imgUrl, true), 800);
             } else {
                 addMessage('maya', aiText);
             }
@@ -107,7 +125,8 @@
 
         } catch (e) {
             statusMsg.innerText = "Erro!";
-            addMessage('maya', "Erro: " + e.message);
+            console.error("Erro na API:", e);
+            addMessage('maya', "Tive um problema de conexão com meu cérebro. Tente novamente em alguns segundos. 😃");
         }
     }
 
